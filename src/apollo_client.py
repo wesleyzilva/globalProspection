@@ -19,6 +19,11 @@ APOLLO_BASE = "https://api.apollo.io/v1"
 _RATE_LIMIT_DELAY = 1.5  # seconds between requests
 
 
+class RateLimitError(Exception):
+    """Raised when the Apollo.io API returns HTTP 429 (quota exhausted)."""
+    pass
+
+
 class ApolloClient:
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("APOLLO_API_KEY", "")
@@ -73,9 +78,10 @@ class ApolloClient:
             return contacts
         except requests.HTTPError as e:
             if resp.status_code == 429:
-                print(f"  [Apollo] Rate limit reached.")
+                raise RateLimitError(
+                    f"Apollo.io rate limit reached for {company_name}")
             elif resp.status_code == 401:
-                print(f"  [Apollo] Invalid API key.")
+                raise ValueError("APOLLO_API_KEY is invalid or expired")
             else:
                 print(f"  [Apollo] HTTP error for {company_name}: {e}")
             return []

@@ -18,6 +18,11 @@ HUNTER_BASE = "https://api.hunter.io/v2"
 _RATE_LIMIT_DELAY = 1.2  # seconds between requests (safe for free tier)
 
 
+class RateLimitError(Exception):
+    """Raised when the Hunter.io API returns HTTP 429 (quota exhausted)."""
+    pass
+
+
 class HunterClient:
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("HUNTER_API_KEY", "")
@@ -59,9 +64,10 @@ class HunterClient:
             return contacts
         except requests.HTTPError as e:
             if resp.status_code == 429:
-                print(f"  [Hunter] Rate limit reached. Try again tomorrow.")
+                raise RateLimitError(
+                    f"Hunter.io rate limit reached for domain {domain}")
             elif resp.status_code == 401:
-                print(f"  [Hunter] Invalid API key.")
+                raise ValueError("HUNTER_API_KEY is invalid or expired")
             else:
                 print(f"  [Hunter] HTTP error for {domain}: {e}")
             return []
