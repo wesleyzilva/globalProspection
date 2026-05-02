@@ -124,7 +124,7 @@ See [recruitmentTech/readme-nearshore.md](https://github.com/wesleyzilva/recruit
 
 > Target: **funded startups and scale-ups** (Series A–C / unicorns) hiring Brazil-based engineering leads for **global** remote roles.
 > Profile: Wesley Silva — IT Manager · UTC-3 · C1 English · AI-First · 14+ years leading nearshore squads.
-> Portfolio: [wesleyzilva.github.io — Nearshore Proposal](https://wesleyzilva.github.io/portfolioNearshoreWesIA/nearshore-proposal)
+> Portfolio: [wesleyzilva.github.io](https://wesleyzilva.github.io/portfolioNearshoreWesIA/)
 
 ---
 
@@ -431,7 +431,7 @@ CI&T,Ana Souza,https://linkedin.com/in/...,Delivery Manager,02/05/2026,A,Respond
 
 | Term | Preference |
 |------|------------|
-| Rate | USD 6,000/month |
+| Rate | USD /month |
 | Contract | 12/24/36 months preferential; quarterly SOW negotiable |
 | Model | Part-time or full-time, SOW-based |
 | Payment | Wire transfer; BTC · USDT · USDC · ETH · SOL accepted |
@@ -444,7 +444,7 @@ CI&T,Ana Souza,https://linkedin.com/in/...,Delivery Manager,02/05/2026,A,Respond
 
 | Page | Link |
 |------|------|
-| Nearshore Proposal | [nearshore-proposal](https://wesleyzilva.github.io/portfolioNearshoreWesIA/nearshore-proposal) |
+| Portfolio | [wesleyzilva.github.io](https://wesleyzilva.github.io/portfolioNearshoreWesIA/) |
 | About / Quick snapshot | [about](https://wesleyzilva.github.io/portfolioNearshoreWesIA/about) |
 | Location & timezone | [location](https://wesleyzilva.github.io/portfolioNearshoreWesIA/location) |
 
