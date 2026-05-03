@@ -1,5 +1,11 @@
 .env
 output/*.csv
+output/**/*.csv
+output/**/*.json
+output/**/*.txt
+output/**/*.log
+output/campaigns/
+output/local/
 __pycache__/
 *.pyc
 *.pyo

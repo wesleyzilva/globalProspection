@@ -6,15 +6,19 @@ Prospector orchestrator — coordinates Hunter + Apollo with:
   - Full logging per run
 """
 
+from __future__ import annotations
+
 import json
 import os
 from config.companies import COMPANIES, RECRUITER_TITLES
 from src.hunter_client import HunterClient, RateLimitError
 from src.apollo_client import ApolloClient, RateLimitError as ApolloRateLimitError
+from src.snov_client import SnovClient, RateLimitError as SnovRateLimitError
 from src.csv_exporter import write_prospects
 from src.dedup_store import DedupStore
 from src.campaign_manager import Campaign
 from src.logger import get_logger, generate_report
+from src.merge_final import merge_all_campaigns
 
 
 def _is_recruiter(position: str, titles: list[str]) -> bool:
@@ -48,7 +52,7 @@ def run_campaign(
     Run a named prospection campaign. Returns campaign stats dict.
     Output: output/campaigns/<campaign_name>/prospects.csv
 
-    source: "hunter" | "apollo" | "combined"
+    source: "hunter" | "apollo" | "snov" | "combined"
     fallback: auto-switch API when rate limit is hit
     """
     campaign = Campaign(
@@ -75,6 +79,35 @@ def run_campaign(
         campaign.update_stats(companies_processed=1)
         contacts: list[dict] = []
 
+        # ── Snov.io ───────────────────────────────────────────────────────
+        if active_source in ("snov", "combined"):
+            if dedup.already_searched_hunter(company["domain"]):
+                log.debug(
+                    f"  [Snov] Skipping {company['domain']} — already searched")
+            else:
+                try:
+                    snov = SnovClient()
+                    raw = snov.domain_search(company["domain"], RECRUITER_TITLES, limit=20)
+                    dedup.mark_hunter_domain(company["domain"])  # reuse same dedup key
+                    campaign.update_stats(hunter_calls=1)
+                    log.info(
+                        f"  [Snov] {len(raw)} raw contacts encontrados em {company['domain']}")
+                    for c in raw:
+                        c["company"] = company["name"]
+                        c["domain"]  = company["domain"]
+                        c["vertical"] = company["vertical"]
+                    contacts.extend(raw)
+
+                except SnovRateLimitError:
+                    log.warning(
+                        f"  [Snov] Rate limit hit para {company['name']} — quota esgotada")
+                    log.error("  Sem fallback para Snov — parando")
+                    break
+
+                except ValueError as e:
+                    log.error(f"  [Snov] Config: {e} — pulando")
+                    campaign.update_stats(errors=1)
+
         # ── Hunter ────────────────────────────────────────────────────────
         if active_source in ("hunter", "combined"):
             if dedup.already_searched_hunter(company["domain"]):
@@ -86,8 +119,8 @@ def run_campaign(
                     raw = hunter.domain_search(company["domain"], limit=20)
                     dedup.mark_hunter_domain(company["domain"])
                     campaign.update_stats(hunter_calls=1)
-                    log.debug(
-                        f"  [Hunter] {len(raw)} raw contacts for {company['domain']}")
+                    log.info(
+                        f"  [Hunter] {len(raw)} raw contacts encontrados em {company['domain']}")
                     for c in raw:
                         c["company"] = company["name"]
                         c["domain"] = company["domain"]
@@ -96,14 +129,19 @@ def run_campaign(
 
                 except RateLimitError:
                     log.warning(
-                        f"  [Hunter] Rate limit hit for {company['name']}")
-                    if fallback and active_source == "hunter":
-                        log.warning(
-                            "  → Falling back to Apollo for remaining companies")
+                        f"  [Hunter] Rate limit hit for {company['name']} — quota esgotada (25/mes)")
+                    # try Snov.io first, then Apollo
+                    snov_available = bool(os.getenv("SNOV_CLIENT_ID"))
+                    if fallback and snov_available:
+                        log.warning("  → Switching to Snov.io para empresas restantes")
+                        active_source = "snov"
+                        campaign.update_stats(api_fallbacks=1)
+                    elif fallback:
+                        log.warning("  → Switching to Apollo para empresas restantes")
                         active_source = "apollo"
                         campaign.update_stats(api_fallbacks=1)
                     else:
-                        log.error("  No fallback — stopping")
+                        log.error("  No fallback configured — stopping")
                         break
 
                 except ValueError as e:
@@ -124,8 +162,8 @@ def run_campaign(
                         company["name"], RECRUITER_TITLES, per_page=5)
                     dedup.mark_apollo_company(company["name"])
                     campaign.update_stats(apollo_calls=1)
-                    log.debug(
-                        f"  [Apollo] {len(raw)} raw contacts for {company['name']}")
+                    log.info(
+                        f"  [Apollo] {len(raw)} raw contacts encontrados para {company['name']}")
                     for c in raw:
                         if not c.get("company"):
                             c["company"] = company["name"]
@@ -146,14 +184,14 @@ def run_campaign(
 
                 except ApolloRateLimitError:
                     log.warning(
-                        f"  [Apollo] Rate limit hit for {company['name']}")
-                    if fallback and active_source == "apollo":
+                        f"  [Apollo] Rate limit hit for {company['name']} — quota esgotada")
+                    if fallback:
                         log.warning(
-                            "  → Falling back to Hunter for remaining companies")
+                            "  → Switching to Hunter for remaining companies")
                         active_source = "hunter"
                         campaign.update_stats(api_fallbacks=1)
                     else:
-                        log.error("  No fallback — stopping")
+                        log.error("  No fallback configured — stopping")
                         break
 
                 except ValueError as e:
@@ -189,6 +227,11 @@ def run_campaign(
         print(f.read())
 
     log.info(f"Done — {written} contacts written to {campaign.prospects_path}")
+
+    # ── Merge all campaigns into consolidated final file ──────────────────
+    total = merge_all_campaigns()
+    log.info(f"Lista final atualizada: output/prospects_final.csv ({total} contatos unicos no total)")
+
     return campaign.stats
 
 

@@ -11,6 +11,8 @@ This lets you run multiple campaigns (e.g. "fintech_q2", "cybersec_may") without
 ever contacting the same person twice.
 """
 
+from __future__ import annotations
+
 import json
 import os
 from datetime import datetime

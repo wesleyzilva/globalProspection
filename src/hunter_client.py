@@ -9,6 +9,8 @@ What it does:
 Free plan: 25 requests/month (domain search counts as 1 request)
 """
 
+from __future__ import annotations
+
 import os
 import time
 import requests

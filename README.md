@@ -483,3 +483,18 @@ git push origin main
 ## 11. Last Updated
 
 `02/05/2026` — Wesley Silva · wesley.silva@br.experian.com · [linkedin.com/in/wesleyzilva](https://linkedin.com/in/wesleyzilva)
+
+---
+
+## Big Picture
+
+The **bottleneck in B2B outreach is not closing — it is list quality**. Sales tools, CRMs, and message templates are worthless without a targeted, current, enriched list of the right people. This tool eliminates the most time-consuming and least differentiated task in a business development cycle: manual prospect research. It cascades through free API tiers (Hunter → Apollo → RocketReach) to produce a ranked, filtered CSV of tech recruiters at funded companies — at zero variable cost per lead for the first 125 prospects per month.
+
+## Executive Tradeoffs
+
+| Dimension | Decision | Alternative Rejected | Rationale |
+|-----------|----------|---------------------|-----------|
+| Data sourcing | Free API tier cascade | Single paid provider (ZoomInfo, Lusha) | Free cascade covers 95% of use cases within quota; zero cost validates the list quality before committing to a $500+/month subscription |
+| Runtime | Python CLI | Web SaaS (Apollo UI, Hunter dashboard) | Full data ownership; no prospect data stored on third-party servers; runs offline; no monthly subscription for a tool that runs weekly |
+| Output format | CSV | CRM direct push (HubSpot, Salesforce) | Universal format avoids vendor lock-in at the data layer; any CRM can import CSV; schema changes do not break the pipeline |
+| Filtering strategy | Vertical + geography + title | Generic keyword search | Precision over volume: 50 qualified recruiter contacts outperform 500 generic contacts for conversion rate and account health |

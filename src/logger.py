@@ -3,6 +3,8 @@ Logger — structured logging to both console and campaign log file.
 Also provides report generation (text + JSON).
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os

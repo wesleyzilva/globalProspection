@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Deduplication store — tracks what we've already found to avoid repeating contacts.
 

@@ -2,6 +2,8 @@
 CSV exporter — writes prospect list to output/prospects.csv
 Appends to existing file or creates new one.
 """
+from __future__ import annotations
+
 
 import csv
 import os
